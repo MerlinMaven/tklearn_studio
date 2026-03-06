@@ -78,6 +78,6 @@ TkLearn Studio se repose exclusivement sur la Standard Library de Python 3 (buil
 
 Exécutez simplement le point d'entrée depuis la racine de votre projet :
 ```bash
-python tklearn_studio/main.py
+python main.py
 ```
 > *(Astuce : Depuis l'application, appuyez n'importe quand sur la touche **F5** pour propulser et compiler votre code vers la zone droite !).*
