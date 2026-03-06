@@ -1,4 +1,4 @@
-# 🎓 TkLearn Studio - Guide Utilisateur Complet
+#  TkLearn Studio - Guide Utilisateur Complet
 
 Bienvenue dans le manuel d'utilisation officiel de **TkLearn Studio**, l'Environnement de Développement Intégré (IDE) pensé pour l'apprentissage, la conception et le prototypage d'interfaces graphiques (GUI) en Python avec **Tkinter**.
 
@@ -6,7 +6,7 @@ Ce document vous guide à travers toutes les fonctionnalités de l'application, 
 
 ---
 
-## 📑 Sommaire
+##  Sommaire
 1. [Qu'est-ce que TkLearn Studio ?](#1-quest-ce-que-tklearn-studio-)
 2. [Interface Principale (Vue d'ensemble)](#2-interface-principale-vue-densemble)
 3. [L'Éditeur de Code Intelligent](#3-léditeur-de-code-intelligent)
