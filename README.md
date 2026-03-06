@@ -1,83 +1,95 @@
-#  TkLearn Studio - Édition Professionnelle
+# TkLearn Studio - Édition Professionnelle
 
 TkLearn Studio est un **Environnement de Développement Intégré (IDE)** autonome et visuellement saisissant, bâti à 100% en Python natif avec `tkinter`.
 
 Il a été conçu spécifiquement pour l'apprentissage guidé et le prototypage rapide d'interfaces graphiques (GUI). Il permet aux apprenants et développeurs de rédiger du code Tkinter classique, puis de **prévisualiser instantanément l'interface générée** à l'intérieur même du studio, sans qu'aucune fenêtre externe ne vienne polluer l'écran. 
 
-C'est un véritable bac à sable de code, conçu avec l'esthétique et l'ergonomie des éditeurs de code professionnels modernes tels que `Visual Studio Code`.
+C'est un véritable bac à sable de code interactif, conçu avec l'esthétique et l'ergonomie des éditeurs de code professionnels modernes tels que `Visual Studio Code` et inspiré par la fluidité des interfaces IA réçentes comme `Gemini`.
 
 ---
 
-##  Fonctionnalités Majeures
+## Fonctionnalités Majeures
 
-###  1. Esthétique Premium (Thème Dark+ "VS Code")
+### 1. Esthétique Premium (Thème Dark+ / Antigravity)
 L'interface utilisateur a été raffinée pour repousser les limites de Tkinter originel :
-- **Colors Scheme unifié :** Tons `Dark/Grey` professionnels (`#1e1e1e`, `#2d2d30`, `#333333`).
-- **Activity Bar Rétractable :** Une barre d'action élégante (hauteur fixe 35px, icônes réactives) située à gauche de l'écran pour invoquer les pannels secondaires.
-- **Titres et En-têtes Épurés :** Polices `Segoe UI` modernes, séparateurs "borderless", et accents de couleur fins (comme le bandeau de prévisualisation `#007acc`).
+- **Color Scheme unifié :** Tons sombres neutres professionnels (`#1e1e1e`, `#2d2d30`, `#333333`) avec des textes gris doux pour le confort visuel.
+- **Activity Bar Verticale :** Une barre d'action élégante à gauche de l'écran (avec indicateurs actifs bleus) pour invoquer instantanément l'explorateur ou l'assistant IA.
+- **Scrollbars Invisibles / Sombres :** Des barres de défilement plates, réactives au survol, qui se fondent parfaitement dans le décor.
+- **Status Bar Intégrée :** Une barre d'état inférieure bleue affichant le fichier actif, l'état d'exécution, et la position dynamique du curseur.
 
-###  2. L'Éditeur Intelligent (`CodeEditor`)
-Fini le simple bloc-notes. Notre zone d'édition (`src/ui/editor.py`) agit comme un vrai IDE :
-- **Coloration Syntaxique Live (Syntax Highlighting) :** Les mots-clés (`def`, `class`, `import`), fonctions natives (`print`), chaînes de caractères et nombres prennent doucement couleur à chaque frappe avec les teintes du thème "Dark+" de VS Code.
-- **Numérotation des Lignes Dynamique :** Un canvas en bordure qui suit et dessine parfaitement le numéro de chaque ligne, totalement synchronisé avec le `Scrollbar`.
+### 2. L'Éditeur Intelligent (`CodeEditor`)
+Fini le simple bloc-notes. L'éditeur agit comme un IDE complet :
+- **Coloration Syntaxique Live (Syntax Highlighting) :** Les mots-clés (`def`, `class`, `import`), fonctions natives, chaînes et nombres prennent couleur sans "lag" grâce aux timers Tcl optimisés.
+- **Numérotation des Lignes Dynamique :** Un canvas en bordure qui suit et dessine le numéro de chaque ligne, totalement synchronisé avec le scrolling.
 - **Typage Intelligent (Smart Typing) :**
   - Auto-fermeture instantanée de vos guillemets `""`, parenthèses `()`, et crochets `[]`.
-  - **Smart Indentation :** La touche *Entrée* reproduit le niveau d'indentation de la ligne au-dessus. Encore mieux : après le caractère balise `:`, l'éditeur injecte magiquement une indentation de 4 espaces pour Python !
+  - **Smart Indentation :** L'appui sur *Entrée* reproduit le niveau d'indentation précédent, et ajoute automatiquement 4 espaces après un block conditionnel ou de fonction (`:`).
 
-###  3. Assistant Code IA Propulsé par Mistral (`AIAssistantDialog`)
-TkLearn Studio embarque nativement une surcouche d'assistance générative alimentée par **Mistral AI** (`mistral-small-latest`).
-- **Prompt to UI :** Le bouton magique ✨ dans `l'Activity Bar` ouvre un dialog permettant à l'utilisateur de décrire en langage naturel ce qu'il souhaite coder (ex: *"Crée moi un Login Form avec Grid"*).
-- **Asynchronisme :** La requête vers Mistral ne fige pas l'interface (Multi-threading).
-- **Injection Directe :** Le code rendu par l'IA est nettoyé en arrière-plan et injecté automatiquement dans l'Éditeur, prêt à être exécuté par pression de la touche `[F5]`.
+### 3. Assistant Code IA Intégré (Panneau Latéral)
+TkLearn Studio embarque nativement une surcouche d'assistance générative alimentée par l'API **Mistral**.
+- **Interface Chat Fluide :** Plus de popup gênante. L'assistant vit dans un panneau latéral coulissant, avec une page d'accueil centrée style "Gemini" et un historique de bulles de chat (scrollable, hauteur automatique).
+- **Sélecteur de Modèle Dynamique :** Le bas du panneau vous permet de choisir la complexité du réseau utilisé (`small`, `medium`, `large`).
+- **Prompt to UI Asynchrone :** Demandez ("Crée moi une horloge digitale"), l'IA génère les composants et les injecte magiquement dans l'éditeur sans jamais bloquer ou "freezer" l'application (Multi-threading). 
 
-###  4. Exécuteur "Sandbox" par Interception (`CodeExecutor`)
+### 4. Code Executor & Sandbox ("Preview Live")
 Il s'agit du cœur magique de cette application. En temps normal, la fonction Python `exec()` dans Tkinter est risquée et génère de multiples fenêtres. Mais notre `CodeExecutor` va :
-- **Moquer/Surcharger (Mocking) dynamiquement Tkinter :** N'importe quel code élève appelant `tk.Tk()` instanciera en réalité de manière transparente notre widget de prévisualisation interne (`PreviewFrame`).
-- **Bloquer les plantages de fenêtre racine :** Les appels natifs `root.mainloop()` (ou d'injection infinie) rédigés par les élèves sont annihilés/interceptés pour empêcher le studio maître de planter.
-- **Rediriger le Terminal :** Les sorties standard (`print("Mon Texte")`) de l'utilisateur ne sont jamais perdues, elles sont interceptées et copiées en direct dans la **Console Intégrée** du bas de l'écran.
-- **Coloration d'Erreurs :** En cas d'erreur de saisie élève (`Traceback`), l'écran Tkinter ne gèle pas. L'erreur est capturée subtilement et affichée dans le terminal interne en rouge/vert pour un débug facile.
+- **Moquer (Mocking) dynamiquement Tkinter :** N'importe quel code appelant `tk.Tk()` instanciera en réalité de manière transparente notre widget de prévisualisation interne (`PreviewFrame`).
+- **Bloquer les mainloops infinis :** Les appels `root.mainloop()` rédigés par les élèves sont annihilés/interceptés silencieusement pour empêcher le studio de planter.
+- **Captures Clavier Dédiées :** Vous pouvez coder un vrai jeu fléché (ex: Snake) ! Le studio intercepte vos appels `bind()` et transfère le **Focus Clavier** directement à la frame de prévisualisation cliquable. Autorisant des applications 100% interactives.
+- **Redirection de la Boucle d'Événements :** Les `after()` et callback asynchrones du code testé sont wrappées pour ne pas faire crasher l'application mère en cas d'erreur.
+- **Rediriger le Terminal :** Les sorties standard (`print()`) et les `Tracebacks` d'erreur s'affichent proprement dans la Console grisée intégrée en bas, colorisées selon leur sévérité.
 
-###  5. Inspecteur d'Arborescence Temps-Réel (`WidgetInspector`)
-La prévisualisation n'est pas qu'un écran vide, elle est scrutée par un outil pédagogique :
-- Après chaque exécution de code, le **Widget Inspector** (panneau latéral façon explorateur de fichiers) vient **scanner récursivement le DOM** Python de la vue finale du Tkinter généré.
-- Il construit dynamiquement le **Widget Tree** (l'arbre graphique) afin de montrer visuellement à l'étudiant comment s'empilent ses éléments, avec des icônes déductives pour les Containers ( `Frame`), les Actions ( `Button`) et les Textes ( `Label`).
+### 5. Inspecteur d'Arborescence Temps-Réel (`WidgetInspector`)
+La prévisualisation est scrutée par un puissant outil pédagogique :
+- Après l'exécution d'un code, le **Widget Inspector** vient scanner le sous-arbre graphique généré par votre script.
+- Il construit dynamiquement un `Treeview` qui montre exactement "qui est dans quoi". Idéal pour apprendre ou déboguer le Layout Manager (`pack`, `grid`). 
 
-###  6. Gestionnaire Fichiers et Tutoriels Intégrés (`AppMenu`)
-- Sauvegarde locale ultra-rapide grâce à `Ctrl+S`, ouverture (`Ctrl+O`) ou fonction de type `Enregistrer Sous...`.
-- Apprentissage pas-à-pas grâce au menu contextuel supérieur `Leçons`, qui pousse dynamiquement du code didactique d'exemple dans votre espace éditeur pour vous en faire comprendre le principe.
+### 6. Apprentissage Basé sur des Leçons
+Un catalogue de leçons cliquables (L'essentiel, Options Multiples, Grilles, Canvas, Bindings) est embarqué.
+Toutes nos leçons sont formatées avec la pure architecture classique `root = tk.Tk(); root.mainloop()`. Elles sont pensées pour pouvoir être **copiées et exécutées hors du studio** sans aucune modification, tout en tournant parfaitement à l'intérieur.
 
 ---
 
-##  Architecture du Code Source
-Le projet adhère à d'excellentes normes "Clean Code", avec séparation logique (MVC-like) en modules distincts, facilitant sa compréhension métier :
+## Architecture du Code Source
+
+L'application est découpée intelligemment (Séparation Interface vs Logique) :
 
 ```text
 📁 tklearn_studio/
-├── 📄 main.py                   (Point d'Entrée Central, orchestration globale UI Container)
+├── 📄 main.py                   (Point d'Entrée Central, Conteneurs PanedWindow)
 └── 📁 src/
-    ├── 📁 core/                 (La Logique Métier "Invisible")
-    │   ├── 📄 executor.py       (Magie du Mocking Tk, Redirection, Protection `exec`, Tracebacks)
-    │   ├── 📄 ai_client.py      (Moteur d'API local `urllib` & Requêtes Mistral asynchrones)
-    │   └── 📄 file_manager.py   (Dialogues OS : Sauvegardes, Ouvertures de .py)
+    ├── 📁 core/                 (Moteurs Logiques "Invisibles")
+    │   ├── 📄 executor.py       (Magie du Mocking Tk, Focus Clavier virtuel, Boucle & Exec)
+    │   ├── 📄 ai_client.py      (Serveur d'API multi-thread pour les modèles LLM configurables)
+    │   ├── 📄 file_manager.py   (Dialogues OS: Ouvertures, Sauvegardes .py)
+    │   └── 📄 lesson_loader.py  (Catalogue statique de cours Tkinter prêt-à-injecter)
     │
-    └── 📁 ui/                   (Le Rendu Graphique / Composants Visuels)
-        ├── 📄 editor.py         (Éditeur riche intelligent couplé au Canvas LineNumbering)
-        ├── 📄 preview.py        (Frame-réceptacle dédiée au faux "root.mainloop" élève)
-        ├── 📄 inspector.py      (Arbre "ttk.Treeview" clam-themed d'exploration Widgets)
-        ├── 📄 console.py        (Faux terminal read-only `state="disabled"` pour le débuggage)
-        ├── 📄 ai_assistant.py   (Interface popup IA de prompting asynchrone)
-        └── 📄 menus.py          (Génération standard de la menubar et injection pédagogique)
+    └── 📁 ui/                   (Le Rendu / Les Composants Visuels)
+        ├── 📄 editor.py         (Editeur de texte sur-vitaminé, Indentation IA)
+        ├── 📄 preview.py        (Frame Cliquable réceptacle du code injecté)
+        ├── 📄 inspector.py      (Arbre "ttk.Treeview" explorateur de widgets construits)
+        ├── 📄 console.py        (Terminal logger colorisé de sorties standards et d'erreurs)
+        ├── 📄 ai_assistant.py   (Panneau latéral de discussion, Sélecteur LLM, Home Screen)
+        ├── 📄 status_bar.py     (Pied-de-page informatif dynamique, Ln/Col tracker)
+        ├── 📄 menus.py          (AppMenu supérieur: Fichiers, Outils, Raccourcis OS)
+        └── 📄 theme.py          (Unico-déclaration Constantes Couleurs, Polices et Scrollbars)
 ```
 
 ---
 
-##  Guide d'Installation et Exécution
+## Prérequis et Installation
 
-**Aucun Setup externe n'est requis !**
-TkLearn Studio se repose exclusivement sur la Standard Library de Python 3 (built-in modules `tkinter`, `urllib`, `threading`, `sys`, `re`). Il n'y a **aucun `pip install`** ni dépendance tierce complexe à réaliser.
+**Aucune installation tierce externe n'est requise !**
+TkLearn Studio se repose exclusivement sur la Standard Library de Python 3 (`tkinter`, `urllib`, `threading`, `sys`, `re`). **Aucun `pip install` n'est nécessaire**.
 
-Exécutez simplement le point d'entrée depuis la racine de votre projet :
+> **Note IA :** Pour utiliser l'assistant génératif, une Clé API valide pour le fournisseur choisi devra exister dans vos variables d'environnement (`MISTRAL_API_KEY`). Si ce n'est pas le cas, l'assistant vous reverra une erreur claire mais l'IDE continuera de fonctionner parfaitement.
+
+## Exécution
+
+Ouvrez un terminal, placez-vous à la racine du projet et exécutez simplement :
+
 ```bash
 python main.py
 ```
-> *(Astuce : Depuis l'application, appuyez n'importe quand sur la touche **F5** pour propulser et compiler votre code vers la zone droite !).*
+
+> *(Astuce : Appuyez n'importe quand sur la touche **F5** pour exécuter instantanément le code de l'éditeur sur la droite !).*
