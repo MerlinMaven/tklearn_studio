@@ -1,23 +1,28 @@
 import tkinter as tk
+from tkinter import ttk
+import re
+from src.ui.theme import (
+    BG_MEDIUM, BG_DARK, FG_SECONDARY, FG_PRIMARY, FG_DIM, FG_BRIGHT,
+    ACCENT_BLUE, FONT_UI_BOLD, FONT_CODE, FONT_CODE_BOLD, FONT_CODE_ITALIC,
+    SYNTAX_KEYWORD, SYNTAX_BUILTIN, SYNTAX_STRING, SYNTAX_COMMENT,
+    SYNTAX_NUMBER, SYNTAX_SELF, BG_HOVER
+)
+
 
 class CustomText(tk.Text):
     def __init__(self, *args, **kwargs):
         tk.Text.__init__(self, *args, **kwargs)
-
-        # Create a proxy for the underlying widget
         self._orig = self._w + "_orig"
         self.tk.call("rename", self._w, self._orig)
         self.tk.createcommand(self._w, self._proxy)
 
     def _proxy(self, *args):
-        # Let the actual widget perform the requested action
         cmd = (self._orig,) + args
         try:
             result = self.tk.call(cmd)
         except tk.TclError:
             return None
 
-        # Generate an event if something changed that affects line numbers
         if (args[0] in ("insert", "replace", "delete") or 
             args[0:3] == ("mark", "set", "insert") or
             args[0:2] == ("xview", "moveto") or
@@ -37,74 +42,118 @@ class LineNumbers(tk.Canvas):
 
     def redraw(self, *args):
         self.delete("all")
-
         i = self.text_widget.index("@0,0")
         while True:
             dline = self.text_widget.dlineinfo(i)
-            if dline is None: pass # sometimes at bottom it's None before full render
-            elif getattr(self.text_widget, "yview")()[1] != 1.0 or dline is not None:
-                y = dline[1]
-                linenum = str(i).split(".")[0]
-                self.create_text(self.winfo_width() - 5, y, anchor="ne", 
-                                 text=linenum, font=("Consolas", 12), fill="#858585")
+            if dline is None:
+                break
+            
+            y = dline[1]
+            linenum = str(i).split(".")[0]
+            self.create_text(self.winfo_width() - 5, y, anchor="ne", 
+                             text=linenum, font=FONT_CODE, fill=FG_DIM)
             
             i = self.text_widget.index(f"{i}+1line")
-            if self.text_widget.compare(i, ">", "end-1c"):
+            if self.text_widget.compare(i, ">=", "end"):
                 break
 
 
 class CodeEditor(tk.Frame):
     def __init__(self, parent):
-        super().__init__(parent, bg="#252526")
+        super().__init__(parent, bg=BG_MEDIUM)
         
         # Header
-        self.header = tk.Label(self, text=" ÉDITEUR DE CODE (PYTHON)", bg="#252526", fg="#cccccc", font=("Segoe UI", 9), anchor="w", padx=15, pady=8)
-        self.header.pack(side=tk.TOP, fill=tk.X)
+        self.header_frame = tk.Frame(self, bg=BG_MEDIUM)
+        self.header_frame.pack(side=tk.TOP, fill=tk.X)
         
-        # Text area container
-        self.text_frame = tk.Frame(self, bg="#1e1e1e")
-        self.text_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=2, pady=2)
+        self.accent = tk.Frame(self.header_frame, bg=ACCENT_BLUE, width=3)
+        self.accent.pack(side=tk.LEFT, fill=tk.Y)
         
-        self.scrollbar = tk.Scrollbar(self.text_frame)
+        self.header = tk.Label(
+            self.header_frame, text="  EDITEUR", 
+            bg=BG_MEDIUM, fg=FG_DIM, font=FONT_UI_BOLD, 
+            anchor="w", padx=10, pady=5
+        )
+        self.header.pack(side=tk.LEFT, fill=tk.X, expand=True)
+        
+        # Tab bar
+        self.tab_frame = tk.Frame(self, bg="#1a1a1a", height=28)
+        self.tab_frame.pack(side=tk.TOP, fill=tk.X)
+        self.tab_frame.pack_propagate(False)
+        
+        # Active tab
+        self.tab_container = tk.Frame(self.tab_frame, bg=BG_DARK)
+        self.tab_container.pack(side=tk.LEFT, fill=tk.Y)
+        
+        self.tab_accent = tk.Frame(self.tab_container, bg=ACCENT_BLUE, height=2)
+        self.tab_accent.pack(side=tk.TOP, fill=tk.X)
+        
+        self.tab_label = tk.Label(
+            self.tab_container, text="  sans_titre.py", 
+            bg=BG_DARK, fg=FG_PRIMARY, font=("Segoe UI", 8),
+            anchor="w", padx=12, pady=3
+        )
+        self.tab_label.pack(fill=tk.BOTH, expand=True)
+        
+        # Rest of tab bar (darker fill)
+        tk.Frame(self.tab_frame, bg="#1a1a1a").pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        # Editor area
+        self.text_frame = tk.Frame(self, bg=BG_DARK)
+        self.text_frame.pack(side=tk.TOP, fill=tk.BOTH, expand=True, padx=1, pady=(0, 1))
+        
+        self.scrollbar = ttk.Scrollbar(self.text_frame, style="Dark.Vertical.TScrollbar")
         self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
-        # CustomText instead of normal Text
-        self.text_widget = CustomText(self.text_frame, wrap=tk.NONE, yscrollcommand=self.scrollbar.set, 
-                                   font=("Consolas", 12), bg="#1e1e1e", fg="#d4d4d4",
-                                   insertbackground="white", selectbackground="#264f78",
-                                   relief=tk.FLAT, padx=10, pady=10, borderwidth=0)
+        self.text_widget = CustomText(
+            self.text_frame, wrap=tk.NONE, yscrollcommand=self.scrollbar.set, 
+            font=FONT_CODE, bg=BG_DARK, fg=FG_PRIMARY,
+            insertbackground="white", selectbackground="#264f78",
+            relief=tk.FLAT, padx=10, pady=10, borderwidth=0
+        )
         
-        # Line numbers canvas
-        self.line_numbers = LineNumbers(self.text_frame, self.text_widget, width=40, bg="#1e1e1e", highlightthickness=0)
+        self.line_numbers = LineNumbers(
+            self.text_frame, self.text_widget, width=45, 
+            bg=BG_DARK, highlightthickness=0
+        )
         self.line_numbers.pack(side=tk.LEFT, fill=tk.Y)
         
         self.text_widget.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.scrollbar.config(command=self.text_widget.yview)
 
-        # Event bindings to redraw line numbers
         self.text_widget.bind("<<Change>>", self._on_change)
         self.text_widget.bind("<Configure>", self._on_change)
         
-        # Configure syntax highlighting tags
         self._setup_syntax_highlighting()
-        
-        # Smart typing features
         self._setup_smart_typing()
-        
-        # Initial draw
+        self._insert_welcome()
         self.after(50, self.line_numbers.redraw)
 
+    def _insert_welcome(self):
+        """Code de démarrage simple et utile."""
+        welcome = '''import tkinter as tk
+
+root = tk.Tk()
+root.title("Mon Application")
+
+label = tk.Label(root, text="Bienvenue dans TkLearn Studio", font=("Arial", 14))
+label.pack(pady=20)
+
+bouton = tk.Button(root, text="Cliquez-moi", command=lambda: print("Bravo !"))
+bouton.pack(pady=10)
+
+root.mainloop()
+'''
+        self.text_widget.insert("1.0", welcome)
+        self._highlight_syntax()
+
     def _setup_smart_typing(self):
-        # Auto-close brackets and quotes
         self.text_widget.bind("<KeyRelease-parenleft>", lambda e: self._insert_and_move(")", -1))
         self.text_widget.bind("<KeyRelease-bracketleft>", lambda e: self._insert_and_move("]", -1))
         self.text_widget.bind("<KeyRelease-braceleft>", lambda e: self._insert_and_move("}", -1))
         self.text_widget.bind("<KeyRelease-quotedbl>", lambda e: self._auto_quote("\""))
         self.text_widget.bind("<KeyRelease-quoteright>", lambda e: self._auto_quote("'"))
-        # Using apostrophe for single quote on some keyboards
         self.text_widget.bind("<KeyRelease-apostrophe>", lambda e: self._auto_quote("'"))
-        
-        # Smart Return (Indentation)
         self.text_widget.bind("<Return>", self._smart_indent)
         
     def _insert_and_move(self, char, offset):
@@ -112,13 +161,10 @@ class CodeEditor(tk.Frame):
         self.text_widget.mark_set(tk.INSERT, f"{tk.INSERT}{offset}c")
         
     def _auto_quote(self, char):
-        # Prevent double closing if user types the closing quote manually
         current_pos = self.text_widget.index(tk.INSERT)
         prev_char = self.text_widget.get(f"{current_pos}-1c", current_pos)
         next_char = self.text_widget.get(current_pos, f"{current_pos}+1c")
         
-        # If we just typed a quote and the next char is already that quote, 
-        # it means user typed closing quote. Delete what we just typed and move forward.
         if prev_char == char and next_char == char:
             self.text_widget.delete(f"{current_pos}-1c", current_pos)
             self.text_widget.mark_set(tk.INSERT, f"{current_pos}+1c")
@@ -126,11 +172,9 @@ class CodeEditor(tk.Frame):
             self._insert_and_move(char, -1)
 
     def _smart_indent(self, event):
-        # Custom Return handling
-        current_line_idx = self.text_widget.index("insert - 1 line")
-        current_line_text = self.text_widget.get(f"{current_line_idx} linestart", f"{current_line_idx} lineend")
+        current_line_idx = self.text_widget.index("insert linestart")
+        current_line_text = self.text_widget.get(current_line_idx, "insert lineend")
         
-        # Find current indentation
         indent = ""
         for char in current_line_text:
             if char in (" ", "\t"):
@@ -138,68 +182,53 @@ class CodeEditor(tk.Frame):
             else:
                 break
                 
-        # If line ends with colon, increase indentation
         if current_line_text.strip().endswith(":"):
-            indent += "    " # 4 spaces
+            indent += "    "
             
-        # Insert the calculated indentation
         if indent:
             self.text_widget.insert(tk.INSERT, indent)
-            return "break" # Prevent default return if we modified something, though tk already did the newline.
-        
+            return "break"
 
     def _setup_syntax_highlighting(self):
-        # VS Code Dark+ Theme colors
-        self.text_widget.tag_configure("Keyword", foreground="#569cd6", font=("Consolas", 12, "bold"))
-        self.text_widget.tag_configure("Builtin", foreground="#4ec9b0")
-        self.text_widget.tag_configure("String", foreground="#ce9178")
-        self.text_widget.tag_configure("Comment", foreground="#6a9955", font=("Consolas", 12, "italic"))
-        self.text_widget.tag_configure("Number", foreground="#b5cea8")
-        self.text_widget.tag_configure("Self", foreground="#569cd6", font=("Consolas", 12, "italic"))
+        self.text_widget.tag_configure("Keyword", foreground=SYNTAX_KEYWORD, font=FONT_CODE_BOLD)
+        self.text_widget.tag_configure("Builtin", foreground=SYNTAX_BUILTIN)
+        self.text_widget.tag_configure("String", foreground=SYNTAX_STRING)
+        self.text_widget.tag_configure("Comment", foreground=SYNTAX_COMMENT, font=FONT_CODE_ITALIC)
+        self.text_widget.tag_configure("Number", foreground=SYNTAX_NUMBER)
+        self.text_widget.tag_configure("Self", foreground=SYNTAX_SELF, font=FONT_CODE_ITALIC)
 
     def _highlight_syntax(self):
-        import re
         
-        # Effacer tous les anciens tags
         for tag in ["Keyword", "Builtin", "String", "Comment", "Number", "Self"]:
             self.text_widget.tag_remove(tag, "1.0", tk.END)
 
         code = self.text_widget.get("1.0", tk.END)
 
-        # Mots-clés Python (Keyword)
         keywords = ["def", "class", "import", "from", "as", "return", "pass", "if", "elif", "else", 
-                    "while", "for", "in", "break", "continue", "True", "False", "None", "and", "or", "not"]
+                    "while", "for", "in", "break", "continue", "True", "False", "None", "and", "or", "not",
+                    "try", "except", "finally", "with", "yield", "lambda", "global", "nonlocal", "raise",
+                    "del", "assert", "is"]
         kw_pattern = r'\b(' + '|'.join(keywords) + r')\b'
         self._apply_tag("Keyword", kw_pattern, code)
 
-        # Builtins souvent utilisés par l'utilisateur
-        builtins = ["print", "len", "range", "str", "int", "float", "list", "dict", "super"]
+        builtins = ["print", "len", "range", "str", "int", "float", "list", "dict", "super",
+                    "type", "isinstance", "hasattr", "getattr", "setattr", "enumerate", "zip", "map", "filter"]
         bi_pattern = r'\b(' + '|'.join(builtins) + r')\b'
         self._apply_tag("Builtin", bi_pattern, code)
         
-        # Self
         self._apply_tag("Self", r'\bself\b', code)
-        
-        # Nombres
         self._apply_tag("Number", r'\b\d+\.?\d*\b', code)
-
-        # Chaines de caractères (simples et doubles)
         self._apply_tag("String", r"'.*?'|\".*?\"", code)
-
-        # Commentaires
         self._apply_tag("Comment", r'#.*$', code)
 
     def _apply_tag(self, tag_name, pattern, text):
-        import re
         for match in re.finditer(pattern, text, re.MULTILINE):
             start = match.start()
             end = match.end()
             
-            # Convert str index to Tkinter text index
-            # This is a bit slow for huge files, but perfect for a learning studio
             line_start = text.count('\n', 0, start) + 1
             col_start = start - text.rfind('\n', 0, start) - 1
-            if start < text.find('\n'): col_start = start # first line fix
+            if start < text.find('\n'): col_start = start
             
             line_end = text.count('\n', 0, end) + 1
             col_end = end - text.rfind('\n', 0, end) - 1
@@ -209,7 +238,6 @@ class CodeEditor(tk.Frame):
 
     def _on_change(self, event=None):
         self.line_numbers.redraw()
-        # On debounce légèrement la coloration pour ne pas lagger à chaque touche
         if hasattr(self, '_highlight_id'):
             self.after_cancel(self._highlight_id)
         self._highlight_id = self.after(200, self._highlight_syntax)
@@ -222,3 +250,6 @@ class CodeEditor(tk.Frame):
         self.text_widget.insert("1.0", code)
         self.line_numbers.redraw()
         self._highlight_syntax()
+    
+    def set_tab_name(self, filename):
+        self.tab_label.config(text=f"  {filename}")
